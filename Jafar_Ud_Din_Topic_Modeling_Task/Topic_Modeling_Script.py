@@ -2,13 +2,15 @@
 import plotly.express as px
 import pandas as pd
 
+# load csv file
+
 df = pd.read_csv('../data/dataframes/topic-model/topic-model.csv')
-print(df.columns)
-print(df.head())
+print(df.columns) #check for columns
+print(df.head())  #check for rows
 
 #removing unclassified articles(articles with no topics assigned)
 
-df = df[df["Topic"] != -1]
+df = df[df["Topic"] != -1]  #ai document code 1 + exercise 14.2
 
 
 #remove rows where all topic keywords are stopwords
@@ -25,13 +27,14 @@ stop_words = { 'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you
     'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 
     'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 
     'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'al', 'said', 'don', 'should', 'now'}
-def is_all_stopwords(row):
+# checking for topics which has all keywords as stopwords
+def is_all_stopwords(row):  # ai code 2
     words = [row['topic_1'], row['topic_2'], row['topic_3'], row['topic_4']]
     return all(word.lower() in stop_words for word in words)
 
-#Update the dataframe to keep only the rows where not all topic words are stopwords.”
+#Update the dataframe to keep only the rows where not all topic words are stopwords
 df = df[~df.apply(is_all_stopwords, axis=1)]
-
+print(df)
 
 #print all topic keywords for manual review
 topic_keywords = df.groupby("Topic")[["topic_1", "topic_2", "topic_3", "topic_4"]].first().reset_index()
@@ -41,7 +44,7 @@ for _, row in topic_keywords.iterrows():
     words = ", ".join([row["topic_1"], row["topic_2"], row["topic_3"], row["topic_4"]])
     print(f"Topic {topic_num}: {words}")
 
-# Define topic-to-category mapping
+# Define each topic to its relevant category
 category_map = {
     # Conflict
     1: "Conflict", 5: "Conflict", 6: "Conflict", 8: "Conflict", 23: "Conflict",
@@ -75,23 +78,6 @@ df = df[df["date"] >= start_date]
 #  Group by month and narrative category
 grouped = df.groupby(["month_year", "Narrative_Category"]).size().reset_index(name="Article_Count")
 
-#  Create the visualization
-fig = px.bar(
-    grouped,
-    x="month_year",
-    y="Article_Count",
-    color="Narrative_Category",
-    barmode="group",
-    title="Narrative Shift in Al Jazeera’s Gaza Coverage (Since Oct 7, 2023)",
-    labels={
-        "month_year": "Month",
-        "Article_Count": "Number of Articles",
-        "Narrative_Category": "Narrative Focus"
-    }
-)
-
-# Rotate x-axis labels for better readability
-fig.update_layout(xaxis_tickangle=-45)
 
 # Show the chart
 fig.show()
@@ -113,5 +99,5 @@ fig = px.line(
 # Rotate labels to prevent crowding
 fig.update_layout(xaxis_tickangle=-45)
 
-# Show the interactive chart
+
 fig.show()
