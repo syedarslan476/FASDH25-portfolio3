@@ -30,18 +30,27 @@ stop_words = { 'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you
 # checking for topics which has all keywords as stopwords
 def is_all_stopwords(row):  # ai code 2
     words = [row['topic_1'], row['topic_2'], row['topic_3'], row['topic_4']]
+   # lowercase to check for storp words and select the topics that has all the values as stopword
     return all(word.lower() in stop_words for word in words)
 
-#Update the dataframe to keep only the rows where not all topic words are stopwords
+# Update the dataframe to keep only the rows where not all topic words are stopwords
 df = df[~df.apply(is_all_stopwords, axis=1)]
-print(df)
 
-#print all topic keywords for manual review
+print(df)  # Printing the updated dataframe
+
+
+# Print all topic keywords for manual review
+# Group by topic and get the first row of keywords for each topic
 topic_keywords = df.groupby("Topic")[["topic_1", "topic_2", "topic_3", "topic_4"]].first().reset_index()
 
-for _, row in topic_keywords.iterrows():
-    topic_num = row["Topic"]
+# Loop through each topic and print its keywords
+for _, row in topic_keywords.iterrows():   #ai code 3
+    topic_num = row["Topic"] #Get the topic number
+
+    #combine the four keywords into one line, separating by commas
     words = ", ".join([row["topic_1"], row["topic_2"], row["topic_3"], row["topic_4"]])
+
+    #print the topic number and its keywords
     print(f"Topic {topic_num}: {words}")
 
 # Define each topic to its relevant category
@@ -63,24 +72,26 @@ category_map = {
     60: "Diplomacy", 61: "Diplomacy", 66: "Diplomacy", 77: "Diplomacy", 45: "Diplomacy",
 }
 
-#  Keep only relevant topics
+#  filtering to Keep only relevant topics
 df = df[df["Topic"].isin(category_map.keys())]
+
+# new column 'Narrative_Category' by mapping each topic number to its category
 df["Narrative_Category"] = df["Topic"].map(category_map)
 
-#️ Create full date and month-year
+#️Create full date and month-year column
 df["date"] = pd.to_datetime(df[["year", "month", "day"]])
 df["month_year"] = df["date"].dt.to_period("M").astype(str)
 
 # Keep only data from 2023-10-07 onwards
-start_date = pd.to_datetime("2023-10-07")
+start_date = pd.to_datetime("2023-09-07")
 df = df[df["date"] >= start_date]
 
 #  Group by month and narrative category
 grouped = df.groupby(["month_year", "Narrative_Category"]).size().reset_index(name="Article_Count")
 
 
-# Show the chart
-fig.show()
+# Create a line char 
+
 
 fig = px.line(
     grouped,
@@ -100,4 +111,24 @@ fig = px.line(
 fig.update_layout(xaxis_tickangle=-45)
 
 
+# Add annotation (example: highlight October 2023 spike)
+fig.add_annotation(
+    x="2023-10",  # Month to annotate
+    y=grouped[(grouped["month_year"] == "2023-10")]["Article_Count"].max(),  # Y position
+    text="Start of Gaza Conflict(month of oct)",  # Annotation text
+    showarrow=True,
+    arrowhead=1,
+    ax=0,
+    ay=-40,
+    bgcolor="white",
+    bordercolor="black"
+)
+
+#show the graph
 fig.show()
+
+# Save to HTML
+fig.write_html("Jafar Uddin.html")
+print("Line graph of Narrative Shift in Al Jazeera's Gaza Coverage saved as 'Jafar Uddin.html'")
+
+
